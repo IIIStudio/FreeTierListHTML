@@ -5,7 +5,7 @@
 ## 简单说明
 
 1. 如果插入的图片是本地的，下载下来会转化为 base64，如果是链接则不进行转换
-2. 如果你是想分享你的创造，可以使用?txt=https://iiistudio.github.io/FreeTierListHTML/txt/test.txt 注意：不支持跨域的txt不行。
+2. 如果你是想分享你的创造，可以使用?txt=https://iiistudio.github.io/FreeTierListHTML/txt/test.txt 注意：不支持跨域的txt不行。[点击查看](https://iiistudio.github.io/FreeTierListHTML/?txt=https://iiistudio.github.io/FreeTierListHTML/txt/test.txt)
 3. 单击Tier List 排序，修改名称
 
 ## 图片
@@ -98,3 +98,4 @@ index.html?txt=https://your.cdn.com/tiers/sample.txt
 - 图片不显示或跨域问题：部分站点图片可能禁止跨域或防盗链，建议使用可公开访问的图片或转为 base64
 
 - 标签颜色不满意：点击标签处的颜色按钮（■）弹出色板更换
+
