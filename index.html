@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tier List 排序</title>
+    <style>
+        :root {
+            --tier-S: #FF5252;
+            --tier-A: #FF9800;
+            --tier-B: #FFEB3B;
+            --tier-C: #4CAF50;
+            --tier-D: #2196F3;
+            --tier-E: #9C27B0;
+            --tier-F: #607D8B;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0px 20px 0px 20px;
+            flex: 1;
+            flex-direction: column;
+            width: 100%;
+            padding: 0 20px;
+            flex-direction: column;
+        }
+        
+        .tier-list-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        h1:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .tier-list {
+            display: flex;
+            flex-direction: column;
+            background-color: #000000;
+            flex: 1;
+        }
+        
+        .tier-row {
+            display: flex;
+            margin-bottom: -4px;
+            min-height: 100px;
+            position: relative;
+            border: 5px solid #000;
+        }
+        
+        .tier-label {
+            width: 110px;
+            min-width: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 30px;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .tier-controls {
+            display: none;
+            justify-content: center;
+            margin-top: 5px;
+        }
+        
+        .tier-label:hover .tier-controls {
+            display: flex;
+        }
+        
+        .tier-control-btn {
+                width: 18.5px;
+                height: 18.5px;
+                border: 2px solid #000;
+                background-color: white;
+                color: black;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 17px;
+                /* margin: 0 1px; */
+                transition: all 0.2s;
+        }
+        
+        .tier-control-btn:hover {
+            background-color: black;
+            color: white;
+            border-color: white;
+        }
+        
+        .tier-content {
+            flex-grow: 1;
+            background-color: #2f2b2b;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            min-height: 100px;
+            align-content: flex-start;
+            min-width: 0;
+            margin-left: 5px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .item {
+            height: 90px;
+            margin: 5px;
+            background-color: #ddd;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            position: relative;
+            transition: transform 0.1s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .item.dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+        }
+        
+        .item.placeholder {
+            background-color: rgba(0,0,0,0.1);
+            border: 2px dashed #666;
+        }
+        
+        .item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        
+        .bottom-panel {
+            margin-top: 10px;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        
+        .bottom-panel.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .item-pool {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            min-height: 150px;
+        }
+        
+        button {
+            padding: 8px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .upload-btn {
+            background-color: #2196F3;
+        }
+        
+        .upload-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
+        }
+        
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        #txt-input {
+            display: none;
+        }
+        
+        .item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .item:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .tier-S { background-color: var(--tier-S); }
+        .tier-A { background-color: var(--tier-A); }
+        .tier-B { background-color: var(--tier-B); }
+        .tier-C { background-color: var(--tier-C); }
+        .tier-D { background-color: var(--tier-D); }
+        .tier-E { background-color: var(--tier-E); }
+        .tier-F { background-color: var(--tier-F); }
+        
+        .title-edit {
+            display: none;
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .tier-label-edit {
+            display: none;
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 4px;
+            background-color: rgba(0,0,0,0.2);
+            color: white;
+        }
+        
+        .color-picker-popup {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            display: none;
+        }
+        
+        .color-option {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin: 2px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        
+        .screen-bottom-detector {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            z-index: 10;
+        }
+
+        .load-default-btn {
+            background-color: #9C27B0; 
+        }
+        .load-default-btn:hover {
+            background-color: #7B1FA2; 
+        }
+        
+        .screenshot-btn {
+            background-color: #FF9800; 
+        }
+        .screenshot-btn:hover {
+            background-color: #F57C00; 
+        }
+        .hidden-for-screenshot {
+            display: none !important;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="tier-list-container">
+            <h1 id="main-title">Tier List 排序</h1>
+            <input type="text" class="title-edit" id="title-edit" placeholder="输入标题">
+            
+            <div class="tier-list" id="tier-list">
+                <!-- 默认行 -->
+                <div class="tier-row" data-tier-id="S">
+                    <div class="tier-label tier-S">
+                        <span class="label-text">S</span>
+                        <input type="text" class="tier-label-edit" placeholder="输入标签名称">
+                        <div class="tier-controls">
+                            <div class="tier-control-btn move-up" title="上移行">↑</div>
+                            <div class="tier-control-btn move-down" title="下移行">↓</div>
+                            <div class="tier-control-btn add-below" title="下方添加行">+</div>
+                            <div class="tier-control-btn clear-row" title="清空行">□</div>
+                            <div class="tier-control-btn delete-row" title="删除行">×</div>
+                            <div class="tier-control-btn color-picker-btn" title="修改颜色">■</div>
+                        </div>
+                    </div>
+                    <div class="tier-content" data-tier="S"></div>
+                </div>
+                <div class="tier-row" data-tier-id="A">
+                    <div class="tier-label tier-A">
+                        <span class="label-text">A</span>
+                        <input type="text" class="tier-label-edit" placeholder="输入标签名称">
+                        <div class="tier-controls">
+                            <div class="tier-control-btn move-up" title="上移行">↑</div>
+                            <div class="tier-control-btn move-down" title="下移行">↓</div>
+                            <div class="tier-control-btn add-below" title="下方添加行">+</div>
+                            <div class="tier-control-btn clear-row" title="清空行">□</div>
+                            <div class="tier-control-btn delete-row" title="删除行">×</div>
+                            <div class="tier-control-btn color-picker-btn" title="修改颜色">■</div>
+                        </div>
+                    </div>
+                    <div class="tier-content" data-tier="A"></div>
+                </div>
+                <div class="tier-row" data-tier-id="B">
+                    <div class="tier-label tier-B">
+                        <span class="label-text">B</span>
+                        <input type="text" class="tier-label-edit" placeholder="输入标签名称">
+                        <div class="tier-controls">
+                            <div class="tier-control-btn move-up" title="上移行">↑</div>
+                            <div class="tier-control-btn move-down" title="下移行">↓</div>
+                            <div class="tier-control-btn add-below" title="下方添加行">+</div>
+                            <div class="tier-control-btn clear-row" title="清空行">□</div>
+                            <div class="tier-control-btn delete-row" title="删除行">×</div>
+                            <div class="tier-control-btn color-picker-btn" title="修改颜色">■</div>
+                        </div>
+                    </div>
+                    <div class="tier-content" data-tier="B"></div>
+                </div>
+            </div>
+            
+            <div class="bottom-panel" id="bottom-panel">
+                <div class="controls">
+                    <button class="upload-btn" id="upload-btn">上传图片</button>
+                    <input type="file" id="file-input" accept="image/*" multiple>
+                    <button class="upload-btn" id="upload-txt-btn">导入TXT</button>
+                    <input type="file" id="txt-input" accept=".txt">
+                    <button id="export-txt-btn">导出TXT</button>
+                    <button id="reset-list" class="delete-btn">重置</button>
+                    <button id="screenshot-btn" class="screenshot-btn">生成图片</button>
+                    <button id="load-default" class="load-default-btn">加载 Test</button>
+                </div>
+                <div class="item-pool" id="item-pool">
+                    <!-- 图片将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen-bottom-detector" id="screen-bottom-detector"></div>
+    <div class="loading-overlay" id="loading-overlay" style="display: none;">加载中，请稍候...</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemPool = document.getElementById('item-pool');
+            const tierList = document.getElementById('tier-list');
+            const uploadBtn = document.getElementById('upload-btn');
+            const uploadTxtBtn = document.getElementById('upload-txt-btn');
+            const fileInput = document.getElementById('file-input');
+            const txtInput = document.getElementById('txt-input');
+            const exportTxtBtn = document.getElementById('export-txt-btn');
+            const resetBtn = document.getElementById('reset-list');
+            const mainTitle = document.getElementById('main-title');
+            const titleEdit = document.getElementById('title-edit');
+            const bottomPanel = document.getElementById('bottom-panel');
+            const screenBottomDetector = document.getElementById('screen-bottom-detector');
+            const loadDefaultBtn = document.getElementById('load-default');
+            const screenshotBtn = document.getElementById('screenshot-btn');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            // 检查URL参数
+            function getUrlParameter(name) {
+                name = name.replace(/[\[\]]/g, '\\$&');
+                const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+                const results = regex.exec(window.location.href);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }
+            
+            // 加载远程TXT文件
+            async function loadRemoteTxt(url) {
+                try {
+                    loadingOverlay.style.display = 'flex';
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error('文件加载失败，请检查URL是否正确');
+                    }
+                    const content = await response.text();
+                    
+                    // 清空现有内容（包括默认行）
+                    tierList.innerHTML = '';
+                    itemPool.innerHTML = '';
+                    itemCounter = 0;
+                    
+                    processTxtContent(content);
+                    
+                    // 设置标题为文件名（不含扩展名）
+                    const fileName = url.split('/').pop().replace(/\.[^/.]+$/, "");
+                    mainTitle.textContent = fileName;
+                    
+                    loadingOverlay.style.display = 'none';
+                } catch (error) {
+                    console.error('加载远程TXT文件出错:', error);
+                    loadingOverlay.style.display = 'none';
+                    alert('加载远程TXT文件失败: ' + error.message);
+                }
+            }
+
+            // 检查是否有txt参数
+            const txtUrl = getUrlParameter('txt');
+            if (txtUrl) {
+                loadRemoteTxt(txtUrl);
+            }
+                        
+            // 新增加载默认文件函数
+            async function 加载默认文件() {
+                try {
+                    loadingOverlay.style.display = 'flex';
+                    // 从服务器获取test.txt文件
+                    const 响应 = await fetch('./txt/test.txt');
+                    if (!响应.ok) {
+                        throw new Error('文件加载失败，请检查文件是否存在');
+                    }
+                    const 内容 = await 响应.text();
+                    
+                    // 清空现有内容
+                    tierList.innerHTML = '';
+                    itemPool.innerHTML = '';
+                    itemCounter = 0;
+                    
+                    // 处理加载的内容
+                    processTxtContent(内容);
+                    
+                    // 设置默认标题
+                    mainTitle.textContent = 'Test Tier列表';
+                    
+                    loadingOverlay.style.display = 'none';
+                } catch (错误) {
+                    console.error('加载默认文件出错:', 错误);
+                    loadingOverlay.style.display = 'none';
+                    alert('加载默认文件失败: ' + 错误.message);
+                }
+            }
+            
+            // 为新按钮添加点击事件
+            loadDefaultBtn.addEventListener('click', 加载默认文件);
+            
+            let itemCounter = 0;
+            let dragItem = null;
+            let placeholder = null;
+            let colorPicker = null;
+            let hideBottomPanelTimeout = null;
+            let bottomPanelVisible = false;
+            let currentColorPickerRow = null;
+            
+            const tierColors = ['tier-S', 'tier-A', 'tier-B', 'tier-C', 'tier-D', 'tier-E', 'tier-F'];
+            
+            // 初始化默认行
+            initDefaultRows();
+            
+            // 显示底部面板
+            function showBottomPanel() {
+                if (hideBottomPanelTimeout) {
+                    clearTimeout(hideBottomPanelTimeout);
+                    hideBottomPanelTimeout = null;
+                }
+                
+                if (!bottomPanelVisible) {
+                    bottomPanel.classList.add('visible');
+                    bottomPanelVisible = true;
+                }
+            }
+            
+            // 隐藏底部面板
+            function hideBottomPanel() {
+                if (bottomPanelVisible) {
+                    bottomPanel.classList.remove('visible');
+                    bottomPanelVisible = false;
+                }
+            }
+            
+            // 设置5秒后隐藏底部面板
+            function scheduleHideBottomPanel() {
+                if (hideBottomPanelTimeout) {
+                    clearTimeout(hideBottomPanelTimeout);
+                }
+                hideBottomPanelTimeout = setTimeout(hideBottomPanel, 2000);
+            }
+            
+            // 初始化底部面板行为
+            function initBottomPanelBehavior() {
+                // 鼠标进入底部面板区域时显示
+                bottomPanel.addEventListener('mouseenter', function() {
+                    showBottomPanel();
+                });
+                
+                // 鼠标离开底部面板区域时设置5秒后隐藏
+                bottomPanel.addEventListener('mouseleave', function() {
+                    scheduleHideBottomPanel();
+                });
+                
+                // 鼠标进入屏幕底部检测区域时显示底部面板
+                screenBottomDetector.addEventListener('mouseenter', function() {
+                    showBottomPanel();
+                });
+                
+                // 鼠标离开屏幕底部检测区域时设置5秒后隐藏
+                screenBottomDetector.addEventListener('mouseleave', function() {
+                    scheduleHideBottomPanel();
+                });
+                
+                // 初始状态：隐藏底部面板
+                hideBottomPanel();
+            }
+            
+            // 初始化默认行
+            function initDefaultRows() {
+                // 初始化行控制按钮
+                initRowControls();
+                
+                // 添加标签编辑功能
+                document.querySelectorAll('.tier-label').forEach(label => {
+                    const textSpan = label.querySelector('.label-text');
+                    const editInput = label.querySelector('.tier-label-edit');
+                    
+                    label.addEventListener('click', function(e) {
+                        // 防止点击子元素时触发
+                        if (e.target === label || e.target === textSpan) {
+                            editInput.value = textSpan.textContent;
+                            textSpan.style.display = 'none';
+                            editInput.style.display = 'block';
+                            editInput.focus();
+                        }
+                    });
+                    
+                    editInput.addEventListener('blur', function() {
+                        if (editInput.value.trim() !== '') {
+                            textSpan.textContent = editInput.value;
+                        }
+                        editInput.style.display = 'none';
+                        textSpan.style.display = 'inline';
+                    });
+                    
+                    editInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            editInput.blur();
+                        }
+                    });
+                });
+                
+                // 设置拖放区域
+                document.querySelectorAll('.tier-content').forEach(area => {
+                    area.addEventListener('dragover', dragOver);
+                    area.addEventListener('drop', drop);
+                });
+            }
+            
+            // 创建颜色选择器
+            function createColorPicker(row) {
+                if (colorPicker) {
+                    colorPicker.remove();
+                }
+                
+                currentColorPickerRow = row;
+                
+                colorPicker = document.createElement('div');
+                colorPicker.className = 'color-picker-popup';
+                colorPicker.innerHTML = `
+                    <div class="color-option" style="background-color: #FF5252;" data-color="var(--tier-S)" data-class="tier-S"></div>
+                    <div class="color-option" style="background-color: #FF9800;" data-color="var(--tier-A)" data-class="tier-A"></div>
+                    <div class="color-option" style="background-color: #FFEB3B;" data-color="var(--tier-B)" data-class="tier-B"></div>
+                    <div class="color-option" style="background-color: #4CAF50;" data-color="var(--tier-C)" data-class="tier-C"></div>
+                    <div class="color-option" style="background-color: #2196F3;" data-color="var(--tier-D)" data-class="tier-D"></div>
+                    <div class="color-option" style="background-color: #9C27B0;" data-color="var(--tier-E)" data-class="tier-E"></div>
+                    <div class="color-option" style="background-color: #607D8B;" data-color="var(--tier-F)" data-class="tier-F"></div>
+                `;
+                
+                document.body.appendChild(colorPicker);
+                
+                // 定位颜色选择器 - 相对于按钮定位
+                const btn = row.querySelector('.color-picker-btn');
+                const btnRect = btn.getBoundingClientRect();
+                
+                // 计算位置，确保不会超出屏幕
+                const pickerWidth = 180; // 颜色选择器的宽度
+                let left = btnRect.left + btnRect.width/2 - pickerWidth/2;
+                
+                // 确保不会超出屏幕左侧
+                if (left < 10) left = 10;
+                // 确保不会超出屏幕右侧
+                if (left + pickerWidth > window.innerWidth - 10) {
+                    left = window.innerWidth - pickerWidth - 10;
+                }
+                
+                colorPicker.style.left = left + 'px';
+                colorPicker.style.top = (btnRect.bottom + 5) + 'px';
+                colorPicker.style.display = 'block';
+                
+                // 颜色选择事件
+                colorPicker.querySelectorAll('.color-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const label = row.querySelector('.tier-label');
+                        
+                        // 移除所有tier-*类
+                        label.className = label.className.replace(/\btier-\S+/g, '');
+                        label.className = 'tier-label';
+                        
+                        // 添加新的类
+                        if (this.dataset.class) {
+                            label.classList.add(this.dataset.class);
+                        }
+                        
+                        colorPicker.style.display = 'none';
+                        currentColorPickerRow = null;
+                    });
+                });
+                
+                return colorPicker;
+            }
+            
+            // 标题编辑功能
+            mainTitle.addEventListener('click', function() {
+                titleEdit.value = mainTitle.textContent;
+                titleEdit.style.display = 'block';
+                mainTitle.style.display = 'none';
+                titleEdit.focus();
+            });
+            
+            titleEdit.addEventListener('blur', function() {
+                if (titleEdit.value.trim() !== '') {
+                    mainTitle.textContent = titleEdit.value;
+                }
+                titleEdit.style.display = 'none';
+                mainTitle.style.display = 'block';
+            });
+            
+            titleEdit.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    titleEdit.blur();
+                }
+            });
+            
+            // 初始化行控制按钮
+            function initRowControls() {
+                document.querySelectorAll('.tier-control-btn').forEach(btn => {
+                    // 确保事件只绑定一次
+                    if (!btn.hasAttribute('data-initialized')) {
+                        btn.setAttribute('data-initialized', 'true');
+                        
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const row = this.closest('.tier-row');
+                            
+                            if (this.classList.contains('move-up')) {
+                                moveRowUp(row);
+                            } else if (this.classList.contains('move-down')) {
+                                moveRowDown(row);
+                            } else if (this.classList.contains('add-below')) {
+                                addNewRow(row, false);
+                            } else if (this.classList.contains('clear-row')) {
+                                const content = row.querySelector('.tier-content');
+                                while (content.firstChild) {
+                                    itemPool.appendChild(content.firstChild);
+                                }
+                            } else if (this.classList.contains('delete-row')) {
+                                // 直接删除行，不再提示确认
+                                const content = row.querySelector('.tier-content');
+                                while (content.firstChild) {
+                                    itemPool.appendChild(content.firstChild);
+                                }
+                                row.remove();
+                            } else if (this.classList.contains('color-picker-btn')) {
+                                if (currentColorPickerRow === row) {
+                                    if (colorPicker) {
+                                        colorPicker.style.display = 'none';
+                                        currentColorPickerRow = null;
+                                    }
+                                } else {
+                                    createColorPicker(row);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // 上移行
+            function moveRowUp(row) {
+                const prevRow = row.previousElementSibling;
+                if (prevRow) {
+                    row.parentNode.insertBefore(row, prevRow);
+                }
+            }
+            
+            // 下移行
+            function moveRowDown(row) {
+                const nextRow = row.nextElementSibling;
+                if (nextRow) {
+                    row.parentNode.insertBefore(nextRow, row);
+                }
+            }
+            
+            // 上传按钮点击事件
+            uploadBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // TXT导入按钮点击事件
+            uploadTxtBtn.addEventListener('click', function() {
+                txtInput.click();
+            });
+            
+            // 文件选择事件 - 修改为在转换为base64前调整图片大小
+            fileInput.addEventListener('change', function(e) {
+                const files = e.target.files;
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    if (!file.type.match('image.*')) continue;
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            // 创建canvas来调整图片大小
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // 计算新的宽度（保持比例）
+                            const ratio = img.width / img.height;
+                            const newHeight = 200;
+                            const newWidth = newHeight * ratio;
+                            
+                            canvas.width = newWidth;
+                            canvas.height = newHeight;
+                            
+                            // 绘制调整大小后的图片
+                            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                            
+                            // 转换为base64
+                            const resizedDataUrl = canvas.toDataURL('image/png');
+                            
+                            // 创建图片项
+                            const item = createImageItem(resizedDataUrl, file.name);
+                            itemPool.appendChild(item);
+                        };
+                        img.src = e.target.result;
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+                
+                fileInput.value = '';
+            });
+            
+            // TXT文件导入处理
+            txtInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // 设置标题为文件名（不含扩展名）
+                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                mainTitle.textContent = fileName;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    // 清空现有内容（包括默认行）
+                    tierList.innerHTML = '';
+                    itemPool.innerHTML = '';
+                    itemCounter = 0;
+                    
+                    processTxtContent(content);
+                };
+                reader.readAsText(file);
+            });
+            
+            // 处理TXT内容
+            function processTxtContent(content) {
+                const lines = content.split('\n');
+                let currentTier = null;
+                let currentTierRow = null;
+                let tierIndex = 0;
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    
+                    // 检查是否是标签行
+                    if (line.startsWith('#')) {
+                        const tierName = line.substring(1).trim();
+                        if (tierName.toLowerCase() === 'img') {
+                            // img 分组不创建新行，后续项进入 item-pool
+                            currentTier = 'img';
+                            currentTierRow = null;
+                        } else {
+                            currentTier = tierName;
+                            // 创建新行
+                            currentTierRow = createTierRow(tierName, tierIndex);
+                            tierIndex++;
+                        }
+                    } else if (currentTier) {
+                        // 处理图片链接
+                        if (currentTier === 'img') {
+                            // 添加到图片池
+                            const item = createImageItem(line, line.split('/').pop());
+                            itemPool.appendChild(item);
+                        } else if (currentTierRow) {
+                            // 添加到对应的tier行
+                            const item = createImageItem(line, line.split('/').pop());
+                            currentTierRow.querySelector('.tier-content').appendChild(item);
+                        }
+                    }
+                }
+                
+                // 初始化行控制按钮
+                initRowControls();
+            }
+            
+            // 创建tier行
+            function createTierRow(tierName, index) {
+                const colorClass = tierColors[Math.min(index, tierColors.length - 1)];
+                
+                const newRow = document.createElement('div');
+                newRow.className = 'tier-row';
+                newRow.dataset.tierId = tierName;
+                
+                // 标签
+                const label = document.createElement('div');
+                label.className = `tier-label ${colorClass}`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'label-text';
+                textSpan.textContent = tierName;
+                
+                const editInput = document.createElement('input');
+                editInput.type = 'text';
+                editInput.className = 'tier-label-edit';
+                editInput.placeholder = '输入标签名称';
+                
+                // 控制按钮
+                const controls = document.createElement('div');
+                controls.className = 'tier-controls';
+                controls.innerHTML = `
+                    <div class="tier-control-btn move-up" title="上移行">↑</div>
+                    <div class="tier-control-btn move-down" title="下移行">↓</div>
+                    <div class="tier-control-btn add-below" title="下方添加行">+</div>
+                    <div class="tier-control-btn clear-row" title="清空行">□</div>
+                    <div class="tier-control-btn delete-row" title="删除行">×</div>
+                    <div class="tier-control-btn color-picker-btn" title="修改颜色">■</div>
+                `;
+                
+                label.appendChild(textSpan);
+                label.appendChild(editInput);
+                label.appendChild(controls);
+                
+                // 内容区域
+                const content = document.createElement('div');
+                content.className = 'tier-content';
+                content.dataset.tier = tierName;
+                
+                newRow.appendChild(label);
+                newRow.appendChild(content);
+                
+                // 添加到DOM
+                tierList.appendChild(newRow);
+                
+                // 添加标签编辑功能
+                const handleLabelClick = function(e) {
+                    if (e.target === label || e.target === textSpan) {
+                        editInput.value = textSpan.textContent;
+                        textSpan.style.display = 'none';
+                        editInput.style.display = 'block';
+                        editInput.focus();
+                    }
+                };
+                
+                const handleEditBlur = function() {
+                    if (editInput.value.trim() !== '') {
+                        textSpan.textContent = editInput.value;
+                    }
+                    editInput.style.display = 'none';
+                    textSpan.style.display = 'inline';
+                };
+                
+                const handleEditKeypress = function(e) {
+                    if (e.key === 'Enter') {
+                        editInput.blur();
+                    }
+                };
+                
+                label.addEventListener('click', handleLabelClick);
+                editInput.addEventListener('blur', handleEditBlur);
+                editInput.addEventListener('keypress', handleEditKeypress);
+                
+                // 设置拖放区域
+                content.addEventListener('dragover', dragOver);
+                content.addEventListener('drop', drop);
+                
+                // 初始化控制按钮
+                initRowControls();
+                
+                return newRow;
+            }
+            
+            // 添加新行
+            function addNewRow(referenceRow, above) {
+                // 计算新行的颜色类
+                const existingRows = document.querySelectorAll('.tier-row');
+                const colorIndex = Math.min(existingRows.length, tierColors.length - 1);
+                const colorClass = tierColors[colorIndex];
+                
+                const newRow = document.createElement('div');
+                newRow.className = 'tier-row';
+                const newId = 'custom-' + Date.now();
+                newRow.dataset.tierId = newId;
+                
+                // 标签
+                const label = document.createElement('div');
+                label.className = `tier-label ${colorClass}`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'label-text';
+                textSpan.textContent = '新行';
+                
+                const editInput = document.createElement('input');
+                editInput.type = 'text';
+                editInput.className = 'tier-label-edit';
+                editInput.placeholder = '输入标签名称';
+                
+                // 控制按钮
+                const controls = document.createElement('div');
+                controls.className = 'tier-controls';
+                controls.innerHTML = `
+                    <div class="tier-control-btn move-up" title="上移行">↑</div>
+                    <div class="tier-control-btn move-down" title="下移行">↓</div>
+                    <div class="tier-control-btn add-below" title="下方添加行">+</div>
+                    <div class="tier-control-btn clear-row" title="清空行">□</div>
+                    <div class="tier-control-btn delete-row" title="删除行">×</div>
+                    <div class="tier-control-btn color-picker-btn" title="修改颜色">■</div>
+                `;
+                
+                label.appendChild(textSpan);
+                label.appendChild(editInput);
+                label.appendChild(controls);
+                
+                // 内容区域
+                const content = document.createElement('div');
+                content.className = 'tier-content';
+                content.dataset.tier = newId;
+                
+                newRow.appendChild(label);
+                newRow.appendChild(content);
+                
+                // 添加到DOM
+                if (above) {
+                    referenceRow.parentNode.insertBefore(newRow, referenceRow);
+                } else {
+                    referenceRow.parentNode.insertBefore(newRow, referenceRow.nextSibling);
+                }
+                
+                // 初始化控制按钮
+                initRowControls();
+                
+                // 添加标签编辑功能
+                const handleLabelClick = function(e) {
+                    if (e.target === label || e.target === textSpan) {
+                        editInput.value = textSpan.textContent;
+                        textSpan.style.display = 'none';
+                        editInput.style.display = 'block';
+                        editInput.focus();
+                    }
+                };
+                
+                const handleEditBlur = function() {
+                    if (editInput.value.trim() !== '') {
+                        textSpan.textContent = editInput.value;
+                    }
+                    editInput.style.display = 'none';
+                    textSpan.style.display = 'inline';
+                };
+                
+                const handleEditKeypress = function(e) {
+                    if (e.key === 'Enter') {
+                        editInput.blur();
+                    }
+                };
+                
+                label.addEventListener('click', handleLabelClick);
+                editInput.addEventListener('blur', handleEditBlur);
+                editInput.addEventListener('keypress', handleEditKeypress);
+                
+                // 设置拖放区域
+                content.addEventListener('dragover', dragOver);
+                content.addEventListener('drop', drop);
+                
+                return newRow;
+            }
+            
+            // 导出TXT
+            exportTxtBtn.addEventListener('click', function() {
+                const txtContent = generateTxtContent();
+                downloadTxtFile(txtContent, mainTitle.textContent + '.txt');
+            });
+            
+            // 生成TXT内容
+            function generateTxtContent() {
+                let txt = '';
+                
+                // 处理tier行
+                const tierRows = document.querySelectorAll('.tier-row');
+                tierRows.forEach(row => {
+                    const tierId = row.dataset.tierId;
+                    const label = row.querySelector('.label-text').textContent;
+                    txt += `#${label}\n`;
+                    
+                    const items = row.querySelectorAll('.tier-content .item img');
+                    items.forEach(img => {
+                        // 如果是base64图片，直接导出
+                        if (img.src.startsWith('data:')) {
+                            txt += `${img.src}\n`;
+                        } else {
+                            // 如果是外部图片URL，也导出
+                            txt += `${img.src}\n`;
+                        }
+                    });
+                });
+                
+                // 处理图片池
+                txt += '#img\n';
+                const poolItems = itemPool.querySelectorAll('.item img');
+                poolItems.forEach(img => {
+                    if (img.src.startsWith('data:')) {
+                        txt += `${img.src}\n`;
+                    } else {
+                        txt += `${img.src}\n`;
+                    }
+                });
+                
+                return txt;
+            }
+            
+            // 下载TXT文件
+            function downloadTxtFile(content, filename) {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            // 创建图片项
+            function createImageItem(src, filename) {
+                itemCounter++;
+                const itemId = 'item-' + itemCounter;
+                
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.draggable = true;
+                item.dataset.itemId = itemId;
+                
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = filename;
+                img.style.height = '200px'; // 设置固定高度
+                img.style.width = 'auto';  // 宽度自适应
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    item.remove();
+                });
+                
+                item.appendChild(img);
+                item.appendChild(deleteBtn);
+                
+                // 使项目可拖动
+                item.addEventListener('dragstart', dragStart);
+                item.addEventListener('dragend', dragEnd);
+                
+                return item;
+            }
+            
+            // 拖放功能
+            function dragStart(e) {
+                dragItem = e.target.closest('.item');
+                if (!dragItem) return;
+                
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', dragItem.dataset.itemId);
+                
+                setTimeout(() => {
+                    dragItem.classList.add('dragging');
+                }, 0);
+                
+                // 创建占位符
+                placeholder = document.createElement('div');
+                placeholder.className = 'item placeholder';
+                placeholder.style.width = dragItem.offsetWidth + 'px';
+                placeholder.style.height = dragItem.offsetHeight + 'px';
+            }
+            
+            function dragEnd() {
+                if (!dragItem) return;
+                
+                dragItem.classList.remove('dragging');
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+                dragItem = null;
+                placeholder = null;
+            }
+            
+            function dragOver(e) {
+                e.preventDefault();
+                if (!dragItem) return;
+                
+                const dropTarget = getDropTarget(e.target);
+                if (!dropTarget) return;
+                
+                // 在内容区域上方显示占位符
+                if (dropTarget.classList.contains('tier-content') || dropTarget.classList.contains('item-pool')) {
+                    const closestItem = getClosestItem(dropTarget, e.clientX, e.clientY);
+                    
+                    if (closestItem) {
+                        dropTarget.insertBefore(placeholder, closestItem);
+                    } else {
+                        dropTarget.appendChild(placeholder);
+                    }
+                }
+            }
+            
+            function drop(e) {
+                e.preventDefault();
+                if (!dragItem) return;
+                
+                const dropTarget = getDropTarget(e.target);
+                if (!dropTarget) return;
+                
+                if (placeholder && placeholder.parentNode) {
+                    if (placeholder.nextSibling) {
+                        dropTarget.insertBefore(dragItem, placeholder.nextSibling);
+                    } else {
+                        dropTarget.appendChild(dragItem);
+                    }
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+            }
+            
+            function getDropTarget(element) {
+                while (element && !element.classList.contains('tier-content') && !element.classList.contains('item-pool')) {
+                    element = element.parentNode;
+                }
+                return (element.classList.contains('tier-content') || element.classList.contains('item-pool')) ? element : null;
+            }
+            
+            // 改进后的 getClosestItem 函数 - 基于坐标判断
+            function getClosestItem(container, x, y) {
+                const items = Array.from(container.querySelectorAll('.item:not(.dragging)'));
+                if (items.length === 0) return null;
+                
+                let closestItem = null;
+                let closestDistance = Infinity;
+                
+                items.forEach(item => {
+                    const rect = item.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    // 计算鼠标位置与项目中心的距离
+                    const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestItem = item;
+                    }
+                });
+                
+                // 判断是否应该放在项目前面还是后面
+                if (closestItem) {
+                    const rect = closestItem.getBoundingClientRect();
+                    const isBefore = (x < rect.left + rect.width / 2);
+                    return isBefore ? closestItem : closestItem.nextElementSibling;
+                }
+                
+                return null;
+            }
+            
+            // 重置列表
+            function resetList(keepPool = false) {
+                if (!keepPool) {
+                    itemPool.innerHTML = '';
+                }
+                tierList.innerHTML = '';
+                itemCounter = 0;
+                
+                // 重新添加默认行
+                const defaultTiers = ['S', 'A', 'B'];
+                defaultTiers.forEach((tier, index) => {
+                    createTierRow(tier, index);
+                });
+            }
+            
+            // 重置按钮 - 新功能：移动所有图片到图片区并删除空行
+            resetBtn.addEventListener('click', function() {
+                // 移动所有图片到图片区
+                document.querySelectorAll('.tier-content .item').forEach(item => {
+                    itemPool.appendChild(item);
+                });
+
+                // 检查是否存在默认层级
+                const defaultTiers = ['S', 'A', 'B'];
+                const existingTiers = Array.from(document.querySelectorAll('.tier-row')).map(row => row.dataset.tierId);
+                
+                // 确保默认层级存在
+                defaultTiers.forEach((tier, index) => {
+                    if (!existingTiers.includes(tier)) {
+                        createTierRow(tier, index);
+                    }
+                });
+                
+                // 删除所有空行（保留有内容的行和默认行）
+                document.querySelectorAll('.tier-row').forEach(row => {
+                    const tierId = row.dataset.tierId;
+                    const hasItems = row.querySelector('.tier-content .item') !== null;
+                    
+                    // 如果不是默认行且没有内容，则删除
+                    if (!defaultTiers.includes(tierId) && !hasItems) {
+                        row.remove();
+                    }
+                });
+            });
+            
+            // 生成截图并下载
+            screenshotBtn.addEventListener('click', function() {
+                // 获取需要隐藏的元素
+                const controls = document.querySelector('.controls');
+                const itemPool = document.getElementById('item-pool');
+                
+                // 添加隐藏类
+                controls.classList.add('hidden-for-screenshot');
+                itemPool.classList.add('hidden-for-screenshot');
+                
+                // 获取tier-list-container元素
+                const container = document.querySelector('.tier-list-container');
+                
+                // 使用html2canvas库生成截图
+                html2canvas(container, {
+                    backgroundColor: '#f5f5f5',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    onclone: function(clonedDoc) {
+                        // 确保克隆的文档中也隐藏这些元素
+                        const clonedControls = clonedDoc.querySelector('.controls');
+                        const clonedItemPool = clonedDoc.getElementById('item-pool');
+                        if (clonedControls) clonedControls.classList.add('hidden-for-screenshot');
+                        if (clonedItemPool) clonedItemPool.classList.add('hidden-for-screenshot');
+                    }
+                }).then(canvas => {
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.download = mainTitle.textContent + '.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // 截图完成后恢复显示
+                    controls.classList.remove('hidden-for-screenshot');
+                    itemPool.classList.remove('hidden-for-screenshot');
+                }).catch(err => {
+                    console.error('生成截图失败:', err);
+                    alert('生成截图失败，请重试');
+                    
+                    // 出错时也恢复显示
+                    controls.classList.remove('hidden-for-screenshot');
+                    itemPool.classList.remove('hidden-for-screenshot');
+                });
+            });
+            
+            // 初始化底部面板行为
+            initBottomPanelBehavior();
+            
+            // 点击页面其他地方关闭颜色选择器
+            document.addEventListener('click', function(e) {
+                if (colorPicker && !e.target.closest('.color-picker-btn') && !e.target.closest('.color-picker-popup')) {
+                    colorPicker.style.display = 'none';
+                    currentColorPickerRow = null;
+                }
+            });
+            
+            // 防止颜色选择器点击事件冒泡
+            if (colorPicker) {
+                colorPicker.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+        });
+    </script>
+    <!-- 引入html2canvas库 -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        .corner-links {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            align-items: center;
+            z-index: 9999;
+        }
+        .corner-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            color: #212529;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .corner-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .corner-link img,
+        .corner-link svg {
+            width: 22px;
+            height: 22px;
+        }
+        .corner-link .label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+    </style>
+    <div class="corner-links" aria-label="页面固定链接">
+        <a class="corner-link" href="https://github.com/IIIStudio/FreeTierListHTML" target="_blank" rel="noopener noreferrer" aria-label="前往 GitHub 仓库">
+            <!-- 内联 GitHub 图标，避免外部资源依赖 -->
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#24292F" d="M12 .5a12 12 0 0 0-3.79 23.41c.6.11.82-.26.82-.58v-2.02c-3.35.73-4.06-1.61-4.06-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.09 1.83 1.23 1.83 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.51.12-3.15 0 0 1.01-.32 3.3 1.23.96-.27 1.99-.4 3.01-.4s2.05.14 3.01.4c2.29-1.55 3.3-1.23 3.3-1.23.66 1.64.25 2.85.12 3.15.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.63-5.47 5.93.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"/>
+            </svg>
+            <span class="label">FreeTierListHTML</span>
+        </a>
+        <a class="corner-link" href="https://cnb.cool/IIIStudio/HTML/Game/FreeTierListHTML/" target="_blank" rel="noopener noreferrer" aria-label="前往 FreeTierListHTML 文档页面">
+            <img src="https://docs.cnb.cool/images/logo/svg/LogoColorfulIcon.svg" alt="CNB Logo">
+        </a>
+    </div>
+</body>
+</html>
